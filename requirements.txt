@@ -4,6 +4,8 @@ yfinance
 sqlalchemy
 psycopg2-binary
 streamlit
+altair
 matplotlib
 seaborn
 jupyter
+python-dotenv

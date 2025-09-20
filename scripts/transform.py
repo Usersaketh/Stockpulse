@@ -1,8 +1,8 @@
 import pandas as pd
 import os
 
-RAW_DIR = os.path.join("data", "raw")
-PROCESSED_DIR = os.path.join("data", "processed")
+RAW_DIR = os.path.join("..", "data", "raw")
+PROCESSED_DIR = os.path.join("..", "data", "processed")
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 
 def clean_and_transform(ticker="RELIANCE_NS"):
@@ -30,6 +30,16 @@ def clean_and_transform(ticker="RELIANCE_NS"):
     return df
 
 if __name__ == "__main__":
-    clean_and_transform("RELIANCE_NS")
-    clean_and_transform("TCS_NS")
-    clean_and_transform("INFY_NS")
+    import sys
+    
+    # Check if ticker provided as command line argument
+    if len(sys.argv) > 1:
+        ticker = sys.argv[1]
+        print(f"🚀 Processing data for {ticker}")
+        clean_and_transform(ticker)
+    else:
+        # Default behavior - process sample companies
+        print("🚀 No ticker specified, processing default sample companies...")
+        clean_and_transform("RELIANCE_NS")
+        clean_and_transform("TCS_NS")
+        clean_and_transform("INFY_NS")

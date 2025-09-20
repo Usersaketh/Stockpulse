@@ -3,8 +3,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-# Save raw data into data/raw/
-RAW_DIR = os.path.join("data", "raw")
+# Save raw data into ../data/raw/
+RAW_DIR = os.path.join("..", "data", "raw")
 os.makedirs(RAW_DIR, exist_ok=True)
 
 def fetch_stock_data(ticker="RELIANCE.NS", days=60):
@@ -32,6 +32,16 @@ def fetch_stock_data(ticker="RELIANCE.NS", days=60):
     return df
 
 if __name__ == "__main__":
-    fetch_stock_data("RELIANCE.NS")
-    fetch_stock_data("TCS.NS")
-    fetch_stock_data("INFY.NS")
+    import sys
+    
+    # Check if ticker provided as command line argument
+    if len(sys.argv) > 1:
+        ticker = sys.argv[1]
+        print(f"🚀 Fetching data for {ticker}")
+        fetch_stock_data(ticker)
+    else:
+        # Default behavior - fetch sample companies
+        print("🚀 No ticker specified, fetching default sample companies...")
+        fetch_stock_data("RELIANCE.NS")
+        fetch_stock_data("TCS.NS")
+        fetch_stock_data("INFY.NS")

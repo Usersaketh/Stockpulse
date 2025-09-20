@@ -13,7 +13,7 @@ except ImportError:
     print("❌ Database configuration not found. Please check config/db_config.py")
     sys.exit(1)
 
-PROCESSED_DIR = os.path.join("data", "processed")
+PROCESSED_DIR = os.path.join("..", "data", "processed")
 
 def create_stock_table(engine, table_name):
     """
@@ -113,10 +113,23 @@ def load_all_stocks():
     """
     Load all processed stock data to database
     """
-    stocks = ["RELIANCE_NS", "TCS_NS", "INFY_NS"]
+    # Dynamically find all processed CSV files
+    import glob
+    
+    processed_files = glob.glob(os.path.join(PROCESSED_DIR, "*_processed.csv"))
+    stocks = []
+    
+    for file_path in processed_files:
+        filename = os.path.basename(file_path)
+        stock_name = filename.replace("_processed.csv", "")
+        # Skip analysis files
+        if not any(x in stock_name for x in ['analysis_metrics', 'correlation_matrix']):
+            stocks.append(stock_name)
+    
     success_count = 0
     
     print("🚀 Loading all stock data to Supabase database...")
+    print(f"📊 Found {len(stocks)} processed stock files")
     
     for stock in stocks:
         print(f"\n📈 Processing {stock}...")
@@ -151,9 +164,22 @@ def test_database_connection():
         return False
 
 if __name__ == "__main__":
+    import sys
+    
     print("🔗 Testing database connection...")
     if test_database_connection():
         print("\n" + "="*50)
-        load_all_stocks()
+        
+        # Check if specific ticker provided as command line argument
+        if len(sys.argv) > 1:
+            ticker = sys.argv[1]
+            print(f"🚀 Loading {ticker} to database...")
+            if load_stock_data_to_db(ticker):
+                print("✅ Successfully loaded to database")
+            else:
+                print("❌ Failed to load to database")
+        else:
+            # Default behavior - load all stocks
+            load_all_stocks()
     else:
         print("❌ Cannot proceed without database connection")

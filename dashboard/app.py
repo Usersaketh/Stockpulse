@@ -6,11 +6,12 @@ import sys
 import altair as alt
 from sqlalchemy import create_engine, text
 from datetime import datetime, timedelta
+import glob
 
 # Add the parent directory to Python path to import config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Try to import database configuration
+# Try to import configurations
 try:
     from config.db_config import DATABASE_URL
     USE_DATABASE = True
@@ -29,23 +30,130 @@ except ImportError:
     st.warning("⚠️ Database configuration not found. Using CSV files.")
     USE_DATABASE = False
 
+# Import stock universe configuration
+try:
+    from config.stock_universe import STOCK_UNIVERSE, get_all_sectors, get_tickers_by_sector
+    STOCK_CONFIG_AVAILABLE = True
+except ImportError:
+    STOCK_CONFIG_AVAILABLE = False
+
+def get_available_companies():
+    """Dynamically discover available companies from database or CSV files"""
+    available_companies = []
+    
+    if USE_DATABASE:
+        try:
+            # Get available tables from database
+            with engine.connect() as conn:
+                result = conn.execute(text("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_name LIKE 'stock_%'
+                """))
+                tables = [row[0] for row in result]
+                
+                # Extract company names from table names
+                for table in tables:
+                    if table.startswith('stock_'):
+                        company = table.replace('stock_', '').upper()
+                        if '_NS' not in company:
+                            company += '_NS'
+                        available_companies.append(company)
+                        
+        except Exception as e:
+            st.warning(f"Could not fetch from database: {e}")
+    
+    # Fallback: Check CSV files
+    if not available_companies:
+        # Try multiple possible locations for processed files
+        possible_dirs = [
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "processed"),
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "data", "processed"),
+            os.path.join("data", "processed"),
+            os.path.join("scripts", "data", "processed")
+        ]
+        
+        for processed_dir in possible_dirs:
+            if os.path.exists(processed_dir):
+                csv_files = glob.glob(os.path.join(processed_dir, "*_processed.csv"))
+                for file_path in csv_files:
+                    filename = os.path.basename(file_path)
+                    company = filename.replace('_processed.csv', '')
+                    available_companies.append(company)
+                
+                if available_companies:  # Found files, break
+                    st.info(f"📂 Found {len(available_companies)} companies in {processed_dir}")
+                    break
+    
+    # Remove duplicates and sort
+    available_companies = sorted(list(set(available_companies)))
+    
+    return available_companies
+
 st.set_page_config(page_title="📈 StockPulse Dashboard", layout="wide")
 
 st.title("📊 StockPulse – Financial Data Dashboard")
 st.markdown("Interactive insights from NSE/BSE stocks pipeline")
 
+# Get available companies dynamically
+available_companies = get_available_companies()
+
 # Sidebar
 st.sidebar.header("⚙️ Controls")
-ticker_options = {
-    "RELIANCE.NS": "RELIANCE_NS",
-    "TCS.NS": "TCS_NS", 
-    "INFY.NS": "INFY_NS"
-}
-selected_ticker = st.sidebar.selectbox("Choose a stock", list(ticker_options.keys()))
-metric = st.sidebar.selectbox("Metric", ["Close", "Daily_Return", "SMA_20"])
 
-# Convert display name to filename format
-ticker_file = ticker_options[selected_ticker]
+if available_companies:
+    # Create ticker options from available companies
+    ticker_options = {}
+    for company in available_companies:
+        # Convert filename format back to display format
+        display_name = company.replace("_", ".")
+        if not display_name.endswith(".NS"):
+            display_name += ".NS"
+        ticker_options[display_name] = company
+    
+    # Add sector filter if stock universe is available
+    if STOCK_CONFIG_AVAILABLE:
+        st.sidebar.subheader("🏢 Sector Filter")
+        sectors = ["All Sectors"] + [sector.title() for sector in get_all_sectors()]
+        selected_sector = st.sidebar.selectbox("Filter by Sector", sectors)
+        
+        if selected_sector != "All Sectors":
+            sector_tickers = get_tickers_by_sector(selected_sector.lower())
+            # Filter ticker_options to only show companies from selected sector
+            filtered_options = {k: v for k, v in ticker_options.items() 
+                              if any(k.replace(".", "_") == ticker.replace(".", "_") 
+                                   for ticker in sector_tickers)}
+            ticker_options = filtered_options if filtered_options else ticker_options
+    
+    st.sidebar.subheader("📈 Stock Selection")
+    selected_ticker = st.sidebar.selectbox("Choose a stock", list(ticker_options.keys()))
+    metric = st.sidebar.selectbox("Metric", ["Close", "Daily_Return", "SMA_20"])
+    
+    # Show portfolio summary
+    st.sidebar.subheader("📊 Portfolio Overview")
+    st.sidebar.info(f"**Total Companies:** {len(available_companies)}")
+    
+    if STOCK_CONFIG_AVAILABLE:
+        # Count companies by sector
+        sector_counts = {}
+        for company in available_companies:
+            for sector, data in STOCK_UNIVERSE.items():
+                if any(company.replace("_", ".") == ticker for ticker in data["tickers"]):
+                    sector_counts[sector] = sector_counts.get(sector, 0) + 1
+        
+        if sector_counts:
+            st.sidebar.write("**By Sector:**")
+            for sector, count in sorted(sector_counts.items()):
+                st.sidebar.write(f"  • {sector.title()}: {count}")
+    
+    # Convert display name to filename format
+    ticker_file = ticker_options[selected_ticker]
+    
+else:
+    st.error("❌ No stock data found! Please run the ETL pipeline first.")
+    st.info("💡 Run `python scripts/pipeline.py` to fetch and process stock data.")
+    st.stop()
 
 # Load data from database or CSV files
 @st.cache_data
@@ -80,14 +188,23 @@ def load_data(ticker_name):
     
     # Fallback to CSV files
     try:
-        processed_file = f"data/processed/{ticker_name}_processed.csv"
-        if os.path.exists(processed_file):
-            df = pd.read_csv(processed_file, parse_dates=["Date"], index_col="Date")
-            st.info(f"📂 Loaded {len(df)} records from CSV file")
-            return df
-        else:
-            st.error(f"❌ Data file not found: {processed_file}")
-            return None
+        # Try multiple possible locations for processed files
+        possible_files = [
+            f"data/processed/{ticker_name}_processed.csv",
+            f"scripts/data/processed/{ticker_name}_processed.csv",
+            f"../data/processed/{ticker_name}_processed.csv",
+            f"../scripts/data/processed/{ticker_name}_processed.csv"
+        ]
+        
+        for processed_file in possible_files:
+            if os.path.exists(processed_file):
+                df = pd.read_csv(processed_file, parse_dates=["Date"], index_col="Date")
+                st.info(f"📂 Loaded {len(df)} records from CSV file: {processed_file}")
+                return df
+        
+        st.error(f"❌ Data file not found for {ticker_name} in any location")
+        st.info("💡 Searched locations: " + ", ".join(possible_files))
+        return None
     except Exception as e:
         st.error(f"❌ Error loading data: {str(e)}")
         return None

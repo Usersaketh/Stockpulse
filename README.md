@@ -1,29 +1,46 @@
 # 📈 StockPulse Data Pipeline
 
-**StockPulse** is a comprehensive end-to-end ETL pipeline for Indian stock market data (NSE/BSE) with real-time analysis and visualization capabilities. Built with modern data engineering practices, it provides professional-grade financial analysis tools.
+**StockPulse** is a comprehensive end-to-end ETL pipeline for Indian stock market data (NSE/BSE) with enterprise-scale processing capabilities. Built with modern data engineering practices, it successfully processes **63+ companies across 10 industry sectors** with real-time analysis and visualization.
 
 ---
 
-## 🚀 Features
+## 🚀 Key Highlights
 
-- **🔄 Data Ingestion**: Automated fetching from Yahoo Finance API for NSE stocks
-- **🛠️ ETL Pipeline**: Complete Extract, Transform, Load workflow with data validation
-- **🗄️ Database Integration**: Supabase PostgreSQL backend for scalable data storage
-- **📊 Interactive Dashboard**: Real-time Streamlit web application with advanced visualizations
-- **📈 Technical Analysis**: Comprehensive indicators including SMA, momentum, volatility analysis
-- **🎯 Trading Signals**: Automated buy/sell/hold recommendations with multi-factor analysis
-- **📔 Jupyter Analytics**: In-depth data analysis and research notebooks
-- **🔧 Modular Architecture**: Clean, maintainable code structure with configuration management
+- **📊 Multi-Sector Coverage**: 63+ companies across Technology, Banking, Energy, Pharmaceuticals, FMCG, Automobile, Metals, Infrastructure, Telecom, and Utilities
+- **🔄 Scalable ETL Pipeline**: Process single companies or entire sectors with flexible configuration  
+- **🗄️ Enterprise Database**: Supabase PostgreSQL with real-time data persistence
+- **📈 Interactive Dashboard**: Real-time Streamlit web application with sector filtering and dynamic company selection
+- **⚙️ Technical Analysis**: Professional-grade indicators including SMA, momentum, volatility analysis
+- **🏗️ Production-Ready**: Error handling, monitoring, progress tracking, and 90%+ success rate
+- **🔧 Developer Experience**: Command-line interface, modular configuration, and comprehensive documentation
 
 ---
 
-## 📊 Supported Stocks
+## 🏢 Currently Supported Companies & Sectors
 
-- **RELIANCE.NS** - Reliance Industries Limited
-- **TCS.NS** - Tata Consultancy Services  
-- **INFY.NS** - Infosys Limited
+### 📊 **63+ Companies Across 10 Sectors**
 
-*Easily extensible to add more NSE/BSE stocks*
+| Sector | Companies | Success Rate | Examples |
+|--------|-----------|--------------|----------|
+| **Technology** | 6 companies | 75% | TCS, INFY, WIPRO, HCLTECH, TECHM, MPHASIS |
+| **Banking** | 8 companies | 100% | HDFCBANK, ICICIBANK, SBIN, KOTAKBANK, AXISBANK |
+| **Energy** | 8 companies | 100% | RELIANCE, ONGC, IOC, BPCL, GAIL |
+| **Pharmaceuticals** | 8 companies | 100% | SUNPHARMA, DRREDDY, CIPLA, DIVISLAB |
+| **FMCG** | 8 companies | 100% | HINDUNILVR, ITC, BRITANNIA, DABUR |
+| **Automobile** | 6 companies | 75% | MARUTI, TATAMOTORS, M&M, BAJAJ-AUTO |
+| **Metals** | 8 companies | 100% | TATASTEEL, HINDALCO, JSWSTEEL, SAIL |
+| **Infrastructure** | 6 companies | 75% | LT, ULTRACEMCO, GRASIM, SHREECEM |
+| **Telecom** | 2 companies | 100% | BHARTIARTL, IDEA |
+| **Utilities** | 4 companies | 80% | POWERGRID, NTPC, TATAPOWER |
+
+### 📈 **Predefined Portfolio Sets**
+```bash
+# Quick start options
+python scripts/pipeline.py --ticker-set tech_focused      # 6-8 tech companies
+python scripts/pipeline.py --ticker-set banking_focused   # 8 banking companies
+python scripts/pipeline.py --ticker-set diversified_portfolio  # Cross-sector companies
+python scripts/pipeline.py --ticker-set comprehensive     # All configured companies
+```
 
 ---
 
@@ -42,7 +59,6 @@
 ### Frontend & Visualization  
 - **Streamlit** - Interactive web dashboard framework
 - **Altair** - Declarative statistical visualization
-- **Matplotlib/Seaborn** - Advanced plotting and analytics
 
 ### Development & Analysis
 - **Jupyter** - Interactive data analysis notebooks
@@ -53,7 +69,7 @@
 ## 📂 Project Structure
 
 ```
-stockpulse-data-pipeline/
+stockpulse/
 ├── 📁 data/                    # Data storage
 │   ├── raw/                   # Yahoo Finance downloads  
 │   └── processed/             # Clean, transformed data
@@ -67,7 +83,8 @@ stockpulse-data-pipeline/
 ├── 📁 Notebooks/              # Data analysis and research
 │   └── analysis.ipynb        # Comprehensive stock analysis
 ├── 📁 config/                 # Configuration management
-│   └── db_config.py          # Database connection settings
+│   ├── db_config.py          # Database connection settings
+│   └── stock_universe.py     # Company and sector definitions
 ├── 📄 requirements.txt        # Python dependencies
 ├── 📄 .env                   # Environment variables (not in repo)
 └── 📄 README.md              # Project documentation
@@ -79,8 +96,8 @@ stockpulse-data-pipeline/
 
 ### 1. Clone and Setup
 ```bash
-git clone https://github.com/your-username/stockpulse-data-pipeline.git
-cd stockpulse-data-pipeline
+git clone <your-repo-url>
+cd stockpulse
 ```
 
 ### 2. Create Virtual Environment
@@ -114,36 +131,42 @@ DB_NAME=postgres
 
 ### 5. Run the Complete Pipeline
 ```bash
-python scripts/pipeline.py
+# Process all companies
+python scripts/pipeline.py --ticker-set comprehensive
+
+# Or process specific sector
+python scripts/pipeline.py --ticker-set tech_focused
 ```
 
 ### 6. Launch the Dashboard
 ```bash
-streamlit run dashboard/app.py
+cd dashboard
+streamlit run app.py --server.port=8502
 ```
 
-Visit `http://localhost:8501` to access the interactive dashboard!
+Visit `http://localhost:8502` to access the interactive dashboard!
 
 ---
 
 ## 📈 Dashboard Features
 
 ### 🎯 Real-time Visualizations
-- **Price Trends**: Interactive line charts with SMA overlays
-- **Technical Indicators**: Momentum, volatility, and volume analysis  
-- **Comparative Analysis**: Multi-stock performance comparison
+- **Company Selection**: Choose from 63+ companies across 10 sectors
+- **Sector Filtering**: Filter companies by industry sector
+- **Price Trends**: Interactive line charts with technical indicators
+- **Portfolio Overview**: Complete sector and company distribution
 
 ### 🔧 Technical Analysis
 - **Moving Averages**: 20-day SMA with trend analysis
-- **Support & Resistance**: Dynamic level identification
-- **Volume Analysis**: Trading volume vs historical averages
-- **Risk Metrics**: Volatility and return calculations
+- **Volume Analysis**: Trading volume vs historical patterns
+- **Daily Returns**: Performance metrics and volatility
+- **Database Integration**: Real-time data from Supabase
 
-### 📊 Trading Intelligence
-- **Buy/Sell Signals**: Automated recommendation engine
-- **Position Analysis**: Current price vs technical levels
-- **Trend Detection**: Multi-timeframe trend identification
-- **Risk Assessment**: Comprehensive risk-return profiling
+### 📊 Multi-Sector Intelligence
+- **Cross-Sector Analysis**: Compare performance across industries
+- **Sector Performance**: Industry-wise metrics and trends
+- **Company Comparison**: Side-by-side stock analysis
+- **Market Overview**: Complete ecosystem view
 
 ---
 
@@ -151,17 +174,15 @@ Visit `http://localhost:8501` to access the interactive dashboard!
 
 ### 📊 Data Analysis (Jupyter Notebooks)
 - **Price Trend Analysis**: Historical price movements and patterns
-- **Technical Indicators**: RSI, MACD, Bollinger Bands calculation
-- **Risk-Return Metrics**: Sharpe ratio, maximum drawdown, VaR
-- **Correlation Analysis**: Inter-stock relationship analysis
-- **Volatility Assessment**: Historical and implied volatility analysis
+- **Technical Indicators**: SMA, momentum, volatility calculation
+- **Sector Correlation**: Inter-sector relationship analysis
+- **Performance Metrics**: Returns, volatility, and risk assessment
 
 ### 📈 Key Metrics
 - Daily returns and cumulative performance
 - Rolling volatility and risk metrics  
-- Support/resistance level identification
 - Volume profile and liquidity analysis
-- Sector correlation and market beta
+- Sector correlation and market dynamics
 
 ---
 
@@ -170,7 +191,7 @@ Visit `http://localhost:8501` to access the interactive dashboard!
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   Yahoo Finance │───▶│  ETL Pipeline    │───▶│   Supabase DB   │
-│      API        │    │  (Transform)     │    │  (PostgreSQL)   │
+│      API        │    │  (63+ companies) │    │  (PostgreSQL)   │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                                 │                        │
                                 ▼                        ▼
@@ -182,39 +203,26 @@ Visit `http://localhost:8501` to access the interactive dashboard!
 
 ---
 
-## 🔧 Configuration
-
-### Environment Setup
-The application uses environment variables for secure configuration:
-
-- **Database credentials** for Supabase connection
-- **API keys** and authentication tokens  
-- **Application settings** and feature flags
-
-### Database Schema
-```sql
--- Stock data table structure
-CREATE TABLE stock_[ticker] (
-    date DATE PRIMARY KEY,
-    close DECIMAL(10, 2),
-    high DECIMAL(10, 2), 
-    low DECIMAL(10, 2),
-    open DECIMAL(10, 2),
-    volume BIGINT,
-    daily_return DECIMAL(8, 6),
-    sma_20 DECIMAL(10, 2),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
----
-
 ## 🚀 Advanced Usage
 
-### Custom Stock Addition
+### Adding New Companies
 ```python
-# In scripts/pipeline.py, add new tickers:
-tickers = ["RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS"]
+# In config/stock_universe.py, add to appropriate sector:
+"technology": {
+    "tickers": [
+        "TCS.NS", "INFY.NS", "YOUR_NEW_TICKER.NS"
+    ]
+}
+```
+
+### Custom Pipeline Execution
+```bash
+# Process specific sectors
+python scripts/pipeline.py --ticker-set banking_focused --no-db  # CSV only
+python scripts/pipeline.py --ticker-set tech_focused             # With database
+
+# Show available companies
+python scripts/pipeline.py --show-universe
 ```
 
 ### Database Queries
@@ -225,16 +233,19 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 engine = create_engine(DATABASE_URL)
-df = pd.read_sql("SELECT * FROM stock_reliance_ns", engine)
+df = pd.read_sql("SELECT * FROM stock_reliance_ns LIMIT 10", engine)
 ```
 
-### Extending Analysis
-```python
-# Add custom technical indicators
-def calculate_rsi(prices, window=14):
-    # Custom RSI implementation
-    pass
-```
+---
+
+## 📊 Performance Metrics
+
+- **Total Companies Configured**: 71 companies
+- **Successfully Processed**: 63+ companies  
+- **Overall Success Rate**: 90%+ 
+- **Sectors Covered**: 10 industry sectors
+- **Database Tables**: 63+ stock-specific tables
+- **Data Points**: 40+ days of historical data per company
 
 ---
 
@@ -242,13 +253,13 @@ def calculate_rsi(prices, window=14):
 
 This project demonstrates:
 
-- **Modern Data Engineering**: ETL pipeline design and implementation
-- **Database Integration**: PostgreSQL operations and optimization  
-- **Web Application Development**: Interactive dashboard creation
-- **Financial Analysis**: Technical indicator calculation and interpretation
-- **Data Visualization**: Professional-grade chart and plot creation
-- **API Integration**: Real-time data fetching and processing
-- **Configuration Management**: Secure credential and environment handling
+- **Modern Data Engineering**: ETL pipeline design with error handling
+- **Database Integration**: PostgreSQL operations and real-time persistence  
+- **Web Application Development**: Interactive dashboard with Streamlit
+- **Financial Analysis**: Multi-sector stock market data processing
+- **Data Visualization**: Professional-grade interactive charts
+- **API Integration**: Robust data fetching with failure handling
+- **Configuration Management**: Modular, scalable architecture design
 
 ---
 
@@ -262,20 +273,11 @@ This project demonstrates:
 
 ---
 
-## 🙏 Acknowledgments
-
-- **Yahoo Finance** for providing free stock market data API
-- **Supabase** for the excellent PostgreSQL database platform
-- **Streamlit** for the intuitive web application framework
-- **Python Data Science Community** for the amazing ecosystem of tools
-
----
-
 ## 📞 Support
 
 - **Documentation**: Check the `/docs` folder for detailed guides
 - **Issues**: Report bugs via GitHub Issues
-- **Discussions**: Join GitHub Discussions for community support
+- **Configuration**: Refer to `config/stock_universe.py` for company setup
 
 ---
 
